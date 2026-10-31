@@ -358,8 +358,11 @@ Los endpoints están documentados con las anotaciones `@Tag` y `@Operation` de S
 
 ## 👥 Autores
 
-- **Kevin Gonzalez** — `ms-tickets` y `ms-lineup`
-- _Agregar al resto del equipo (usuario, evento, logística, notificaciones)_
+| Integrante | Microservicios |
+|---|---|
+| **Kevin Gonzalez** | `ms-tickets`, `ms-lineup` |
+| **Diego Jiménez** | `ms-logistica`, `ms-notificaciones` |
+| **José Sánchez** | `ms-usuario`, `ms-evento` |
 
 ---
 

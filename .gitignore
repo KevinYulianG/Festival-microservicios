@@ -1,0 +1,14 @@
+﻿# Credenciales Oracle
+wallet/
+Wallet_*/
+Wallet_*.zip
+.env
+
+# Compilados e IDE
+target/
+.vscode/
+.idea/
+*.class
+
+*.rar
+*.zip

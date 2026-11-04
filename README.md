@@ -5,10 +5,10 @@ Plataforma de gestión de festivales construida con **arquitectura de microservi
 > Proyecto académico — **DSY1103 Desarrollo Fullstack I**, Duoc UC.
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-brightgreen)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3%20%7C%203.4-brightgreen)
 ![Oracle](https://img.shields.io/badge/Oracle-Cloud%20ATP-red)
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
-![Tests](https://img.shields.io/badge/tests-24%20passing-success)
+![Tests](https://img.shields.io/badge/tests%20unitarios-116-success)
 
 ---
 
@@ -54,7 +54,6 @@ flowchart LR
     G --> N
     U --> E
     U --> N
-    E --> N
 ```
 
 ## 🧩 Microservicios
@@ -65,12 +64,12 @@ flowchart LR
 | `ms-evento` | 8802 | Gestión de eventos del festival (estado y aforo). |
 | `ms-tickets` | 8803 | Compra, consulta, validación por QR y cancelación de entradas. |
 | `ms-lineup` | 8804 | Artistas y programación del festival. |
-| `ms-logistica` | 8805 | Recursos y logística del evento. |
-| `ms-notificaciones` | 8806 | Registro y envío de notificaciones a usuarios. |
+| `ms-logistica` | 8805 | Escenarios, zonas y asignación de staff a cada evento. |
+| `ms-notificaciones` | 8806 | Registro de las notificaciones que envían los demás servicios. |
 
 ## 🔗 Comunicación entre servicios
 
-La comunicación usa **OpenFeign** (clientes HTTP declarativos). Las URLs se inyectan por variables de entorno en `docker-compose.yml`, usando el nombre del servicio como host (dentro de Docker `localhost` no sirve entre contenedores).
+La comunicación usa **OpenFeign** (clientes HTTP declarativos), excepto `ms-usuario`, que usa **RestTemplate**. Las URLs se inyectan por variables de entorno en `docker-compose.yml`, usando el nombre del servicio como host (dentro de Docker `localhost` no sirve entre contenedores).
 
 | Origen | Destino | Para qué |
 |---|---|---|
@@ -78,13 +77,17 @@ La comunicación usa **OpenFeign** (clientes HTTP declarativos). Las URLs se iny
 | `ms-tickets` | `ms-evento` | Verificar que el evento está `PUBLICADO` y obtener el aforo máximo |
 | `ms-tickets` | `ms-notificaciones` | Notificar compra y cancelación (si falla, la compra no se revierte) |
 | `ms-lineup` | `ms-evento` | Asociar artistas a un evento existente |
-| `ms-logistica` | `ms-usuario`, `ms-evento` | Coordinar recursos según evento y responsables |
+| `ms-lineup` | `ms-notificaciones` | Notificar cambios en la programación |
+| `ms-logistica` | `ms-usuario`, `ms-evento` | Validar el evento y el personal asignado |
+| `ms-logistica` | `ms-notificaciones` | Notificar cambios en escenarios, zonas y asignaciones |
+| `ms-usuario` | `ms-evento` | Consultar eventos publicados (RestTemplate) |
+| `ms-usuario` | `ms-notificaciones` | Notificar registro y desactivación de usuarios (RestTemplate) |
 
 ## 🛠 Stack tecnológico
 
 | Área | Tecnología |
 |---|---|
-| Lenguaje y framework | Java 17, Spring Boot 3.4 |
+| Lenguaje y framework | Java 17, Spring Boot 3.3 (ms-lineup en 3.4) |
 | Persistencia | Spring Data JPA / Hibernate |
 | Base de datos | Oracle Cloud ATP (conexión con Wallet) |
 | Seguridad | Spring Security + JWT (jjwt 0.12.6) |
@@ -227,11 +230,25 @@ Las pruebas unitarias no usan base de datos ni red: las dependencias se reemplaz
 
 | Tipo de prueba | Herramientas | Qué verifica |
 |---|---|---|
-| Controlador | `@WebMvcTest`, `MockMvc`, `@MockBean`, `@WithMockUser` | Rutas, códigos HTTP y JSON de respuesta (**24 pruebas**) |
-| Servicio | `@Mock`, `@InjectMocks` | Reglas de negocio y excepciones, con repositorio y clientes Feign simulados |
-| Datos de prueba | `TicketTestDataFactory` | Fábrica de DTOs, entidades y respuestas falsas reutilizables |
+| Controlador | `@WebMvcTest`, `MockMvc`, `@MockBean`, `@WithMockUser` | Rutas, códigos HTTP y JSON de respuesta |
+| Servicio | `@Mock`, `@InjectMocks` | Reglas de negocio y excepciones, con repositorio y clientes simulados |
+| Datos de prueba | `*TestDataFactory` | Fábricas de DTOs, entidades y respuestas falsas reutilizables |
 
-Detalles de las pruebas del controlador:
+Pruebas por microservicio:
+
+| Servicio | Tipo | Pruebas |
+|---|---|:---:|
+| `ms-tickets` | Controlador (`TicketControllerTest`) | 24 |
+| `ms-lineup` | Controlador (`ArtistaControllerTest`, `ProgramacionControllerTest`) | 45 |
+| `ms-logistica` | Controlador (zonas, escenarios, asignaciones) | 9 |
+| `ms-evento` | Servicio (`EventoServiceTest`) | 18 |
+| `ms-usuario` | Servicio (`UsuarioServiceTest`) | 13 |
+| `ms-notificaciones` | Servicio (`NotificacionesServiceTest`) | 7 |
+| **Total** | | **116** |
+
+> Cada servicio incluye además el test `contextLoads` que genera Spring; ese sí necesita conexión a Oracle.
+
+Detalles de las pruebas del controlador de `ms-tickets`:
 
 - `@AutoConfigureMockMvc(addFilters = false)` desactiva el filtro JWT para probar solo la capa web.
 - Cubren los seis endpoints, casos exitosos y cada excepción de negocio.
@@ -250,7 +267,11 @@ En PowerShell (Windows):
 .\mvnw.cmd test
 ```
 
-Resultado esperado: `Tests run: 24, Failures: 0, Errors: 0`.
+Para ejecutar solo las pruebas unitarias de `ms-tickets` (sin base de datos):
+
+```bash
+./mvnw test -Dtest=TicketControllerTest
+```
 
 ## 🐳 Ejecución con Docker
 
@@ -312,14 +333,21 @@ docker-compose down
 
 Con los contenedores en ejecución:
 
-- **ms-tickets:** http://localhost:8803/swagger-ui.html
-- **ms-lineup:** http://localhost:8804/swagger-ui.html
+| Servicio | Swagger UI |
+|---|---|
+| ms-usuario | http://localhost:8801/swagger-ui.html |
+| ms-evento | http://localhost:8802/swagger-ui.html |
+| ms-tickets | http://localhost:8803/swagger-ui.html |
+| ms-lineup | http://localhost:8804/swagger-ui.html |
+| ms-logistica | http://localhost:8805/swagger-ui.html |
+| ms-notificaciones | http://localhost:8806/swagger-ui.html |
 
 Los endpoints están documentados con las anotaciones `@Tag` y `@Operation` de Springdoc.
 
 ## 🔐 Seguridad
 
-- **Autenticación JWT:** `ms-usuario` emite el token; los demás servicios lo validan con un filtro propio.
+- **Autenticación JWT:** `ms-usuario` emite el token; `ms-evento`, `ms-tickets`, `ms-lineup` y `ms-logistica` lo validan con un filtro propio.
+- **ms-notificaciones** no exige token: es un servicio de uso interno al que solo llaman los otros microservicios.
 - **Autorización por roles:** `ADMIN`, `STAFF` y `ASISTENTE`.
 - **Credenciales fuera del repositorio:** el Wallet y los archivos `.env` están en `.gitignore`.
 - **DTOs en la API:** las entidades JPA nunca se exponen directamente.

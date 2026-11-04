@@ -1,14 +1,26 @@
-﻿# Credenciales Oracle
+﻿# Credenciales (nunca subir)
+.env
 wallet/
 Wallet_*/
-Wallet_*.zip
-.env
+**/wallet/
 
-# Compilados e IDE
+# Compilados
 target/
-.vscode/
-.idea/
 *.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
 
+# IDE y editores
+.idea/
+.vscode/
+*.iml
+.github/modernize/
+.github/java-upgrade/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Comprimidos
 *.rar
 *.zip

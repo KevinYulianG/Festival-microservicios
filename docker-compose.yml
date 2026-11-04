@@ -1,0 +1,79 @@
+# Configuracion comun: credenciales desde .env y wallet de Oracle montado
+x-ms-comun: &ms-comun
+  env_file: .env
+  volumes:
+    - ./wallet:/app/wallet:ro
+  networks:
+    - festival-net
+  restart: on-failure
+
+services:
+
+  ms-usuarios:
+    <<: *ms-comun
+    build:
+      context: ./ms-usuario
+    ports:
+      - "8801:8801"
+    environment:
+      - TNS_ADMIN_PATH=/app/wallet
+      - MS_EVENTOS_URL=http://ms-evento:8802
+      - MS_NOTIFICACIONES_URL=http://ms-notificaciones:8806
+
+  ms-evento:
+    <<: *ms-comun
+    build:
+      context: ./ms-evento
+    ports:
+      - "8802:8802"
+    environment:
+      - TNS_ADMIN_PATH=/app/wallet
+      - MS_NOTIFICACIONES_URL=http://ms-notificaciones:8806
+
+  ms-tickets:
+    <<: *ms-comun
+    build:
+      context: ./ms-tickets
+    ports:
+      - "8803:8803"
+    environment:
+      - TNS_ADMIN_PATH=/app/wallet
+      - MS_USUARIOS_URL=http://ms-usuarios:8801
+      - MS_EVENTOS_URL=http://ms-evento:8802
+      - MS_NOTIFICACIONES_URL=http://ms-notificaciones:8806
+
+  ms-lineup:
+    <<: *ms-comun
+    build:
+      context: ./ms-lineup
+    ports:
+      - "8804:8804"
+    environment:
+      - TNS_ADMIN_PATH=/app/wallet
+      - MS_EVENTOS_URL=http://ms-evento:8802
+      - MS_NOTIFICACIONES_URL=http://ms-notificaciones:8806
+
+  ms-logistica:
+    <<: *ms-comun
+    build:
+      context: ./ms-logistica
+    ports:
+      - "8805:8805"
+    environment:
+      - TNS_ADMIN_PATH=/app/wallet
+      - MS_USUARIOS_URL=http://ms-usuarios:8801
+      - MS_EVENTOS_URL=http://ms-evento:8802
+      - MS_NOTIFICACIONES_URL=http://ms-notificaciones:8806
+
+  ms-notificaciones:
+    <<: *ms-comun
+    build:
+      context: ./ms-notificaciones
+    ports:
+      - "8806:8806"
+    environment:
+      - TNS_ADMIN_PATH=/app/wallet
+
+networks:
+  festival-net:
+    driver: bridge

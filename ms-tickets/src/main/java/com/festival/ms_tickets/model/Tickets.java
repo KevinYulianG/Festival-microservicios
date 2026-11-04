@@ -28,36 +28,28 @@ public class Tickets {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ID lógico del usuario - viene de MS-Usuarios
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
-    // ID lógico del evento - viene de MS-Eventos
     @Column(name = "evento_id", nullable = false)
     private Long eventoId;
 
-    // Código único generado automáticamente con UUID
     @Column(name = "codigo_qr", unique = true, nullable = false)
     private String codigoQr;
 
-    // Estado del ciclo de vida del ticket
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TicketEstado estado;
 
-    // Tipo de entrada: GENERAL, VIP, BACKSTAGE
     @Column(name = "tipo_entrada", nullable = false)
     private String tipoEntrada;
 
-    // Precio que pagó el asistente
     @Column(name = "precio_pagado", nullable = false)
     private BigDecimal precioPagado;
 
-    // Fecha en que se realizó la compra
     @Column(name = "fecha_compra", nullable = false)
     private LocalDateTime fechaCompra;
 
-    // Fecha en que se validó en puerta (puede ser null si aún no se usa)
     @Column(name = "fecha_validacion")
     private LocalDateTime fechaValidacion;
 }

@@ -11,15 +11,15 @@ import java.util.Optional;
 @Repository
 public interface TicketRepository extends JpaRepository<Tickets, Long> {
 
-    List<Tickets> encontrasrPorUsuario(Long usuarioId);
+    List<Tickets> findByUsuarioId(Long usuarioId);
 
-    List<Tickets> encontrarPorId(Long eventoId);
+    List<Tickets> findByEventoId(Long eventoId);
 
-    Optional<Tickets> encontrarCodigoQr(String codigoQr);
+    Optional<Tickets> findByCodigoQr(String codigoQr);
 
-    long contarEventoyEstado(Long eventoId, List<TicketEstado> estados);
+    long countByEventoIdAndEstadoIn(Long eventoId, List<TicketEstado> estados);
 
-    boolean existeEventoUsuarioEntrada(
+    boolean existsByUsuarioIdAndEventoIdAndTipoEntrada(
         Long usuarioId,
         Long eventoId,
         String tipoEntrada

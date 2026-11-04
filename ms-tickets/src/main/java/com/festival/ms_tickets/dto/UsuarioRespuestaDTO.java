@@ -9,6 +9,6 @@ public class UsuarioRespuestaDTO {
     private String nombre;
     private String email;
     private boolean activo;
-    private String nombreRol; // para verificar permisos si es necesario
+    private String nombreRol;
 
 }

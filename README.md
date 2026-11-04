@@ -268,16 +268,24 @@ Resultado esperado: `Tests run: 24, Failures: 0, Errors: 0`.
    cd Festival-microservicios
    ```
 
-2. Copiar el contenido del Wallet en la carpeta `wallet/` de cada microservicio.
+2. Copiar el contenido del Wallet en una carpeta `wallet/` en la **raíz** del proyecto (una sola copia, Docker la comparte con los 6 contenedores).
    > El Wallet **no se incluye en el repositorio** por seguridad.
 
-3. Levantar todo el sistema:
+3. Crear el archivo `.env` a partir de la plantilla y completar la contraseña de la BD y la clave JWT:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   > `.env` está en `.gitignore`: las credenciales nunca se suben a GitHub.
+
+4. Levantar todo el sistema:
 
    ```bash
    docker-compose up --build
    ```
 
-4. Verificar que los 6 contenedores estén `running` en Docker Desktop o con:
+5. Verificar que los 6 contenedores estén `running` en Docker Desktop o con:
 
    ```bash
    docker-compose ps
@@ -322,6 +330,8 @@ Los endpoints están documentados con las anotaciones `@Tag` y `@Operation` de S
 ```
 .
 ├── docker-compose.yml
+├── .env.example           (plantilla de credenciales)
+├── wallet/                (local, no se sube)
 ├── ms-usuario/
 ├── ms-evento/
 ├── ms-tickets/
@@ -353,7 +363,8 @@ Los endpoints están documentados con las anotaciones `@Tag` y `@Operation` de S
 | `no configuration file provided: not found` | Ejecutar `docker-compose` desde la carpeta que contiene `docker-compose.yml`. |
 | `unable to prepare context: path ... not found` | Revisar que el `context` de cada servicio en `docker-compose.yml` apunte a la carpeta que contiene su `Dockerfile`. |
 | `./mvnw` no se reconoce en PowerShell | Usar `.\mvnw.cmd` y ejecutarlo dentro de la carpeta del microservicio. |
-| Error de conexión a Oracle | Confirmar que el Wallet está en `wallet/` y que las credenciales son correctas. |
+| Error de conexión a Oracle | Confirmar que el Wallet está en `wallet/` (raíz) y que `DB_PASSWORD` en `.env` es correcto. |
+| `Could not resolve placeholder 'JWT_SECRET'` | Falta el archivo `.env` en la raíz. Crearlo con `cp .env.example .env`. |
 | Un servicio no llega a otro en Docker | Usar el nombre del servicio (ej. `http://ms-evento:8802`), no `localhost`. |
 
 ## 👥 Autores
